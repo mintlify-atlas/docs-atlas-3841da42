@@ -22,6 +22,45 @@ export default defineConfig({
 
 The plugin scans your source files automatically and generates only the CSS classes you use. Configuration (custom colors, fonts, breakpoints) goes in `src/index.css` using Tailwind's `@theme` directive instead of a JavaScript config file.
 
+The template's `src/index.css` sets up three things:
+
+```css src/index.css
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  /* ...and more color tokens */
+}
+
+:root {
+  --radius: 0.625rem;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  /* ...full neutral palette */
+}
+
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  /* ...inverted dark palette */
+}
+```
+
+- `@import "tailwindcss"` — replaces the three `@tailwind` directives from v3.
+- `@import "tw-animate-css"` — pulls in animation utility classes.
+- `@custom-variant dark` — defines how the `.dark` class activates dark mode (class-based, not `prefers-color-scheme`).
+- `@theme inline` — bridges CSS custom properties to Tailwind utility names (e.g., `bg-background` maps to `--background`).
+- `:root` / `.dark` — define the neutral color palette using OKLCH values.
+
 <Tip>
   Tailwind v4 uses `@import "tailwindcss"` in `src/index.css` instead of the three `@tailwind` directives from v3. If you're migrating an existing project, update that import first.
 </Tip>

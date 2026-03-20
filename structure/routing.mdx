@@ -27,7 +27,7 @@ import AppRoutes from './AppRoutes';
 export const router = createBrowserRouter(AppRoutes);
 ```
 
-`createBrowserRouter` uses the HTML5 History API for clean URLs (no `#` hash). The exported `router` is passed to `<RouterProvider>` in `main.tsx`.
+`createBrowserRouter` uses the HTML5 History API for clean URLs (no `#` hash). The exported `router` is passed to `<RouterProvider>` in `src/App.tsx`, which `main.tsx` then renders inside `<StrictMode>`.
 
 ## The route tree
 
@@ -127,7 +127,7 @@ This means:
     ```
   </Step>
   <Step title="Link to it from Navigation">
-    Add a `<NavLink>` or `<Link>` inside `src/components/Navigation.tsx` so users can reach the new page.
+    Add a new entry to the links array in `src/components/Navigation.tsx` so users can reach the new page. See [Navigation](/components/navigation) for the exact pattern.
   </Step>
 </Steps>
 

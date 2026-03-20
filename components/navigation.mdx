@@ -1,36 +1,54 @@
 ---
 title: 'Navigation'
 description: 'The Navigation component renders the top navigation bar with client-side links to all routes in the app.'
-keywords: ['navigation', 'navbar', 'links', 'routing', 'react-router-dom']
 ---
 
-`Navigation` is the top-level navigation bar used by [Layout](/components/layout). It renders links to the three main routes: `/`, `/features`, and `/about`. All links use React Router for client-side navigation — no full page reloads.
+`Navigation` is the top-level navigation bar used by [Layout](/components/layout). It renders a dark header with a brand logo link and three route links — `/`, `/features`, and `/about` — using React Router for client-side navigation.
 
-## Source location
+## Source
 
-```
-src/components/Navigation.tsx
+```tsx src/components/Navigation.tsx
+import { NavLink, Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+
+export function Navigation() {
+    return (
+        <header className="bg-gray-800 text-white p-4 shadow-lg">
+            <nav className="container mx-auto flex flex-wrap items-center justify-between gap-2">
+                <Link to="/" className="text-xl font-bold hover:text-gray-300 transition-colors shrink-0">
+                    Vite Template
+                </Link>
+                <div className="flex flex-wrap gap-1 md:gap-2 w-full md:w-auto">
+                    {[
+                        { to: '/', label: 'Home' },
+                        { to: '/features', label: 'Features' },
+                        { to: '/about', label: 'About' },
+                    ].map((i) => (
+                        <NavLink key={i.to} to={i.to} className={({ isActive }) =>
+                            `inline-block rounded-md ${isActive ? 'bg-white/10' : ''}`
+                        }>
+                            {({ isActive }) => (
+                                <Button variant="ghost" className={`text-white hover:bg-gray-700 ${isActive ? 'bg-white/10' : ''}`}>
+                                    {i.label}
+                                </Button>
+                            )}
+                        </NavLink>
+                    ))}
+                </div>
+            </nav>
+        </header>
+    );
+}
 ```
 
 ## How it works
 
-`Navigation` imports `Link` (or `NavLink`) from `react-router-dom` to render route links. Because these are client-side links, clicking them swaps the matched child inside `<Outlet />` without reloading the page.
+The component uses two different React Router APIs:
 
-The component is rendered at the top of the `Layout` shell, above the `<main>` content area:
+- **`Link`** — for the brand logo. A plain client-side link, no active-state styling needed.
+- **`NavLink`** — for the route links. `NavLink` exposes an `isActive` boolean in its render function and `className` callback, which the component uses to apply `bg-white/10` highlight to the currently active route.
 
-```tsx src/components/Layout.tsx
-export function Layout() {
-    return (
-        <div className="min-h-screen flex flex-col bg-gray-50">
-            <Navigation />          {/* ← rendered here, above main */}
-            <main className="grow container mx-auto p-4 md:p-8">
-                <Outlet />
-            </main>
-            ...
-        </div>
-    );
-}
-```
+Each route link renders a `Button` with `variant="ghost"` and `text-white` so it appears as a white text button on the dark `bg-gray-800` header.
 
 ## Routes covered
 
@@ -44,78 +62,100 @@ These paths correspond exactly to the child routes defined in `src/routes/AppRou
 
 ## Relationship with AppRoutes
 
-Navigation links and route definitions must stay in sync. The rule is simple:
+Navigation links and route definitions must stay in sync:
 
-- Every path in `AppRoutes.tsx` that you want users to reach from the nav needs a corresponding link in `Navigation.tsx`.
-- Every link in `Navigation.tsx` must point to a path that exists in `AppRoutes.tsx`.
+- Every path in `AppRoutes.tsx` that you want users to reach from the nav needs a corresponding entry in the `Navigation` link array.
+- Every path in the array must point to a route that exists in `AppRoutes.tsx`.
 
-`Navigation` is a separate component (rather than inline JSX in `Layout`) to keep concerns separated. The layout shell handles structure; the navigation component handles which links to show. This makes it easy to swap, extend, or test the nav independently.
+`Navigation` is a separate component (rather than inline JSX in `Layout`) to keep concerns separated. The layout shell handles structure; the navigation component handles which links to show.
 
 ## How to add a new link
 
-When you add a new route, add a matching link to `Navigation.tsx`.
+When you add a new route, add a matching entry to the navigation array in `Navigation.tsx`.
 
 <Steps>
   <Step title="Add the route in AppRoutes.tsx">
     Register your new page as a child route:
 
     ```tsx src/routes/AppRoutes.tsx
-    { path: 'settings', element: <SettingsPage /> },
+    { path: 'contact', element: <ContactPage /> },
     ```
   </Step>
   <Step title="Add the link in Navigation.tsx">
-    Import `Link` (or `NavLink`) from `react-router-dom` and add a new entry pointing to the route path:
+    Add a new entry to the array inside the `.map()` call:
 
     ```tsx src/components/Navigation.tsx
-    <Link to="/settings">Settings</Link>
+    {[
+        { to: '/', label: 'Home' },
+        { to: '/features', label: 'Features' },
+        { to: '/about', label: 'About' },
+        { to: '/contact', label: 'Contact' }, // [!code ++]
+    ].map((i) => (
+        // ...existing NavLink render
+    ))}
     ```
 
     <Note>
-      Use the exact same path string in both files. A mismatch means the link will navigate to a route that doesn't render anything.
+      Use the same path string in both files. A mismatch means the nav link will navigate to a route that renders nothing.
     </Note>
   </Step>
 </Steps>
 
 ## How to customize
 
-### Change link styles
+### Change the header background
 
-Use `NavLink` instead of `Link` to get access to the `isActive` state, which lets you apply different styles to the currently active link:
+Replace `bg-gray-800` on the `<header>` element with any Tailwind color:
 
 ```tsx
-import { NavLink } from 'react-router-dom';
+<header className="bg-indigo-900 text-white p-4 shadow-lg">
+```
 
-<NavLink
-  to="/features"
-  className={({ isActive }) =>
-    isActive ? 'font-bold underline' : 'text-gray-600'
-  }
->
-  Features
+### Change link styles
+
+The active-state highlight is set via the `isActive` flag in both the `NavLink` `className` callback and the inner `Button` className. Update `bg-white/10` and `hover:bg-gray-700` to match your design:
+
+```tsx
+<NavLink key={i.to} to={i.to} className={({ isActive }) =>
+    `inline-block rounded-md ${isActive ? 'bg-indigo-500' : ''}`
+}>
+    {({ isActive }) => (
+        <Button variant="ghost" className={`text-white hover:bg-indigo-600 ${isActive ? 'bg-indigo-500' : ''}`}>
+            {i.label}
+        </Button>
+    )}
 </NavLink>
 ```
 
 ### Add icons to links
 
-Pair each link with an icon from a library like `lucide-react`, which is available in this template:
+Pair each label with an icon from `lucide-react`, which is already a dependency in this template:
 
 ```tsx
-import { Home } from 'lucide-react';
+import { Home, Zap, Info } from 'lucide-react';
 
-<Link to="/" className="flex items-center gap-2">
-  <Home size={16} />
-  Home
-</Link>
+const links = [
+    { to: '/', label: 'Home', icon: Home },
+    { to: '/features', label: 'Features', icon: Zap },
+    { to: '/about', label: 'About', icon: Info },
+];
+
+// Inside the map:
+<Button variant="ghost" className="text-white hover:bg-gray-700 flex items-center gap-2">
+    <i.icon size={16} />
+    {i.label}
+</Button>
 ```
 
-### Make the nav responsive
+### Move Navigation to a sidebar
 
-For mobile support, wrap links in a collapsible element and toggle visibility with a hamburger button. The shadcn/ui `Sheet` component is already available in this template and works well for a mobile drawer nav.
+`Navigation` is rendered as a direct child of the outer `flex-col` container in `Layout`. To move it to a sidebar, change the outer container to `flex-row` in `Layout.tsx` and adjust the nav's width and height styles:
 
-<Tip>
-  The template includes shadcn/ui. Use the `Sheet` component for a slide-in mobile menu without adding extra dependencies.
-</Tip>
-
-### Change the nav position or layout
-
-`Navigation` is rendered as a direct child of the outer `flex-col` container in `Layout`. To move it to a sidebar, change the outer container to `flex-row` and adjust the nav's width and height styles accordingly.
+```tsx src/components/Layout.tsx
+<div className="min-h-screen flex flex-row bg-gray-50">
+    <Navigation />  {/* now renders as a left sidebar */}
+    <main className="grow p-4 md:p-8">
+        <Outlet />
+    </main>
+</div>
+```

@@ -104,16 +104,20 @@ export default AppRoutes;
   </Step>
 
   <Step title="Add a nav link (optional)">
-    To surface the page in the navigation bar, open `src/components/Navigation.tsx` and add a `<Link>` or `<NavLink>` entry:
+    To surface the page in the navigation bar, open `src/components/Navigation.tsx` and add a new entry to the links array:
 
     ```tsx src/components/Navigation.tsx
-    import { NavLink } from 'react-router-dom'
-
-    // Inside your nav element:
-    <NavLink to="/contact">Contact</NavLink>
+    {[
+        { to: '/', label: 'Home' },
+        { to: '/features', label: 'Features' },
+        { to: '/about', label: 'About' },
+        { to: '/contact', label: 'Contact' }, // [!code ++]
+    ].map((i) => (
+        // ...existing NavLink render
+    ))}
     ```
 
-    Use `NavLink` instead of `Link` when you want to apply an active class to the current route.
+    The Navigation component uses `NavLink` wrapping a ghost `Button`, so the active-state highlight is applied automatically to your new link.
   </Step>
 </Steps>
 

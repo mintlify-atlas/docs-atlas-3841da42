@@ -120,7 +120,7 @@ All pages render inside the `Layout` component (`src/components/Layout`), which 
 
 The template includes three shadcn/ui-style primitives built on Radix UI and styled with Tailwind CSS:
 
-<Columns cols={3}>
+<CardGroup cols={3}>
   <Card title="Button" icon="square-cursor">
     Accessible button with variants powered by `class-variance-authority`.
   </Card>
@@ -130,7 +130,7 @@ The template includes three shadcn/ui-style primitives built on Radix UI and sty
   <Card title="Input" icon="input-text">
     Styled text input with full TypeScript props forwarding.
   </Card>
-</Columns>
+</CardGroup>
 
 ### Path aliases
 
@@ -150,7 +150,7 @@ import { Button } from "@/components/ui/button";
 
 ## Next steps
 
-<Columns cols={2}>
+<CardGroup cols={2}>
   <Card title="Project structure" icon="folder-tree" href="/structure/overview">
     Understand how the template is organized.
   </Card>
@@ -163,4 +163,4 @@ import { Button } from "@/components/ui/button";
   <Card title="Customizing styles" icon="paintbrush" href="/structure/styling">
     Extend or override Tailwind CSS styles.
   </Card>
-</Columns>
+</CardGroup>
