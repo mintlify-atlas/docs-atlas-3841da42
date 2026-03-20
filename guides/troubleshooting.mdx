@@ -1,0 +1,171 @@
+---
+title: Troubleshooting
+description: Fixes for common issues you may run into with this template.
+---
+
+<AccordionGroup>
+  <Accordion title="@/components/... import fails">
+    **Cause:** The `@` path alias is not recognized by TypeScript or your editor.
+
+    **Fix:** Make sure both configuration files define the alias.
+
+    `tsconfig.app.json` must include:
+
+    ```json tsconfig.app.json
+    {
+      "compilerOptions": {
+        "baseUrl": ".",
+        "paths": {
+          "@/*": ["./src/*"]
+        }
+      }
+    }
+    ```
+
+    `vite.config.ts` must include:
+
+    ```ts vite.config.ts
+    import path from 'path'
+
+    export default defineConfig({
+      resolve: {
+        alias: {
+          "@": path.resolve(__dirname, "./src"),
+        },
+      },
+    })
+    ```
+
+    After making changes, restart the dev server with `npm run dev`.
+  </Accordion>
+
+  <Accordion title="Tailwind classes not applying">
+    **Cause:** Tailwind CSS v4 requires the `@tailwindcss/vite` plugin. Without it, classes are not generated.
+
+    **Fix:** Ensure `vite.config.ts` includes the `tailwindcss()` plugin:
+
+    ```ts vite.config.ts
+    import tailwindcss from '@tailwindcss/vite'
+
+    export default defineConfig({
+      plugins: [
+        react(),
+        tailwindcss(),
+      ],
+    })
+    ```
+
+    Restart the dev server after any changes to `vite.config.ts`.
+  </Accordion>
+
+  <Accordion title="Refreshing a page returns 404">
+    **Cause:** The app uses React Router with the HTML5 History API. When you refresh `/features`, the server looks for a file at that path — which does not exist — and returns a 404.
+
+    **Fix:** Configure your server or host to serve `index.html` for all paths.
+
+    | Platform | Fix |
+    |---|---|
+    | **Netlify** | Create `public/_redirects` with `/* /index.html 200` |
+    | **Cloudflare Pages** | Create `public/_redirects` with `/* /index.html 200` |
+    | **GitHub Pages** | Copy `dist/index.html` to `dist/404.html` after building |
+    | **Vercel** | No action needed — handled automatically |
+    | **Other hosts** | Set `index.html` as the custom 404/error document |
+
+    See the [Deploying guide](/guides/deploying) for full platform-specific instructions.
+  </Accordion>
+
+  <Accordion title="TypeScript errors on unused variables">
+    **Cause:** The `tsconfig` enables `strict` mode along with `noUnusedLocals` and `noUnusedParameters`, so TypeScript treats unused variables as errors.
+
+    **Fix:** Remove the unused variable, or prefix its name with `_` to signal that it is intentionally unused:
+
+    ```ts
+    // Before — causes a TypeScript error
+    const unusedValue = 'hello'
+
+    // After — prefix with _ to suppress the error
+    const _unusedValue = 'hello'
+    ```
+  </Accordion>
+
+  <Accordion title="npm run build fails with type errors">
+    **Cause:** `npm run build` runs `tsc -b` before the Vite bundle step. Any TypeScript error causes the build to fail.
+
+    **Fix:** Fix the TypeScript errors first. Use the following command to check types without producing output files:
+
+    ```bash
+    npx tsc --noEmit
+    ```
+
+    Resolve every reported error, then run `npm run build` again.
+  </Accordion>
+
+  <Accordion title="shadcn/ui component not found after adding">
+    **Cause:** The component was added but placed in the wrong directory, or the import path does not match the alias configuration.
+
+    **Fix:** Verify the component file exists in `src/components/ui/`:
+
+    ```bash
+    ls src/components/ui/
+    ```
+
+    Check that `components.json` has the correct aliases:
+
+    ```json components.json
+    {
+      "aliases": {
+        "components": "@/components",
+        "utils": "@/lib/utils"
+      }
+    }
+    ```
+
+    Then import the component using the `@` alias:
+
+    ```tsx
+    import { Button } from "@/components/ui/button";
+    ```
+  </Accordion>
+
+  <Accordion title="Port conflict on npm run dev">
+    **Cause:** Port 5173 (Vite's default) is already in use by another process.
+
+    **Fix:** Vite automatically tries the next available port, so in most cases you can continue on the new port shown in the terminal. To pin a specific port, add a `server` option to `vite.config.ts`:
+
+    ```ts vite.config.ts
+    export default defineConfig({
+      server: {
+        port: 3000,
+      },
+      // ...rest of config
+    })
+    ```
+  </Accordion>
+
+  <Accordion title="Hot Module Replacement (HMR) not working">
+    **Cause:** HMR can fail for several reasons — missing plugin, stale process, or a browser console error blocking updates.
+
+    **Fix:**
+
+    1. Make sure `@vitejs/plugin-react-swc` is in the `plugins` array in `vite.config.ts`:
+
+    ```ts vite.config.ts
+    import react from '@vitejs/plugin-react-swc'
+
+    export default defineConfig({
+      plugins: [
+        react(),
+        // ...
+      ],
+    })
+    ```
+
+    2. Stop the dev server and restart it:
+
+    ```bash
+    npm run dev
+    ```
+
+    3. Open your browser's developer console and check for errors that may be preventing updates from applying.
+  </Accordion>
+</AccordionGroup>

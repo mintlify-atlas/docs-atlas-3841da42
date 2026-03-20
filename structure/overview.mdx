@@ -1,0 +1,185 @@
+---
+title: Project structure overview
+description: A guide to how the template is organized — what each folder and file does, and the conventions the project follows.
+---
+
+This template follows a deliberate folder structure that keeps each concern separate and scales naturally as your app grows. This page walks through every directory and key config file.
+
+## Directory tree
+
+```text
+.
+├─ public/
+├─ src/
+│  ├─ components/
+│  │  ├─ Layout.tsx
+│  │  ├─ Navigation.tsx
+│  │  └─ ui/
+│  │     ├─ button.tsx
+│  │     ├─ card.tsx
+│  │     └─ input.tsx
+│  ├─ data/
+│  │  └─ featureData.ts
+│  ├─ lib/
+│  │  └─ utils.ts
+│  ├─ pages/
+│  │  ├─ HomePage.tsx
+│  │  ├─ FeaturesPage.tsx
+│  │  └─ AboutPage.tsx
+│  └─ routes/
+│     ├─ AppRoutes.tsx
+│     └─ index.tsx
+├─ index.html
+├─ package.json
+├─ components.json
+├─ tsconfig.json
+├─ tsconfig.app.json
+├─ tsconfig.node.json
+└─ vite.config.ts
+```
+
+## `src/` subdirectories
+
+<CardGroup cols={2}>
+  <Card title="components/" icon="puzzle-piece">
+    Reusable UI pieces shared across pages. The `Layout.tsx` shell and `Navigation.tsx` bar live here, alongside the `ui/` folder for shadcn/ui primitives.
+  </Card>
+  <Card title="pages/" icon="file">
+    Full-page components that map one-to-one with routes. Each file exports a single React component rendered inside `Layout` via `<Outlet />`.
+  </Card>
+  <Card title="routes/" icon="map">
+    All routing logic. `AppRoutes.tsx` defines the route tree as a `RouteObject[]` array; `index.tsx` bootstraps `createBrowserRouter` and exports the `router` instance.
+  </Card>
+  <Card title="lib/" icon="wrench">
+    Shared utilities. Currently contains `utils.ts`, which exports the `cn()` helper for composing Tailwind class names.
+  </Card>
+  <Card title="data/" icon="database">
+    Static application data. `featureData.ts` holds the feature list used by `FeaturesPage`. Use this folder for any typed, in-memory data that pages consume directly.
+  </Card>
+  <Card title="components/ui/" icon="component">
+    shadcn/ui primitives (`button.tsx`, `card.tsx`, `input.tsx`). These are owned by your project — edit them directly to customize appearance or behavior.
+  </Card>
+</CardGroup>
+
+## Key config files
+
+### `vite.config.ts`
+
+Configures the build tool with two plugins and the `@` path alias:
+
+```ts vite.config.ts
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react-swc'
+import tailwindcss from '@tailwindcss/vite'
+import path from 'path'
+
+export default defineConfig({
+  plugins: [
+    react(),
+    tailwindcss(),
+  ],
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "./src"),
+    },
+  },
+})
+```
+
+- `@vitejs/plugin-react-swc` — compiles React with the SWC transpiler for faster builds.
+- `@tailwindcss/vite` — integrates Tailwind CSS v4 without a separate `tailwind.config.js` file.
+- The `@` alias maps to `./src`, so you can write `import { cn } from "@/lib/utils"` from anywhere in the project.
+
+### `tsconfig.app.json`
+
+Mirrors the Vite alias on the TypeScript side so the compiler resolves the same paths:
+
+```json tsconfig.app.json
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  }
+}
+```
+
+### `components.json`
+
+The shadcn/ui configuration file. It tells the `shadcn` CLI where to put components and which style variant to use:
+
+```json components.json
+{
+  "$schema": "https://ui.shadcn.com/schema.json",
+  "style": "new-york",
+  "rsc": false,
+  "tsx": true,
+  "tailwind": {
+    "config": "",
+    "css": "src/index.css",
+    "baseColor": "neutral",
+    "cssVariables": true,
+    "prefix": ""
+  },
+  "iconLibrary": "lucide",
+  "aliases": {
+    "components": "@/components",
+    "utils": "@/lib/utils",
+    "ui": "@/components/ui",
+    "lib": "@/lib",
+    "hooks": "@/hooks"
+  }
+}
+```
+
+When you run `npx shadcn add <component>`, the CLI reads this file and drops the new component into `src/components/ui/` with the correct import path for `cn()`.
+
+## Conventions
+
+### `@` path alias
+
+All imports within `src/` use the `@` alias rather than relative paths. This makes imports stable regardless of how deep a file is nested:
+
+```ts
+// preferred
+import { cn } from "@/lib/utils";
+
+// avoid
+import { cn } from "../../lib/utils";
+```
+
+### Small, composable components
+
+Each component has a single responsibility. `Layout` provides the shell; `Navigation` handles the navbar; page components handle only their own content. Avoid putting routing logic inside page components or layout logic inside pages.
+
+### Tailwind utilities over ad-hoc CSS
+
+Style everything with Tailwind utility classes. Reserve `src/index.css` for CSS variables and Tailwind base layer customizations only — not one-off selectors.
+
+## The data layer
+
+`src/data/featureData.ts` is the pattern to follow for static, typed data:
+
+```ts src/data/featureData.ts
+type Feature = {
+    title: string;
+    description: string;
+    tailwindClass: string;
+};
+
+export const features: Feature[] = [
+    {
+        title: "Vite Fast",
+        description: "Lightning fast dev server and build times.",
+        tailwindClass: "bg-blue-100 border-blue-200",
+    },
+    // ...
+];
+```
+
+Define a local `type`, export a typed `const` array, and import it directly in the page that needs it. For dynamic data, replace this pattern with a data-fetching hook or a loader function in your route definition.
+
+<Tip>
+  Keep each data file focused on a single domain (features, team members, pricing tiers, etc.) so pages stay easy to reason about.
+</Tip>

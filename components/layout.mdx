@@ -1,0 +1,154 @@
+---
+title: 'Layout'
+description: 'The Layout component is the app shell that wraps every page. It renders the navigation bar, a main content area, and a footer.'
+keywords: ['layout', 'shell', 'outlet', 'router', 'footer', 'navigation']
+---
+
+`Layout` is the root-level wrapper for all pages in this template. React Router renders it as the parent route element, and each page renders inside it via `<Outlet />`.
+
+## Structure
+
+The component is a full-height flex column with three sections stacked vertically:
+
+```
+┌─────────────────────────────┐
+│        <Navigation />       │  ← top bar with route links
+├─────────────────────────────┤
+│                             │
+│    <main> — <Outlet />      │  ← matched child route renders here
+│                             │
+├─────────────────────────────┤
+│           <footer>          │  ← year + template credit
+└─────────────────────────────┘
+```
+
+<Columns cols={3}>
+  <Card title="Navigation" icon="navigation">
+    Fixed at the top. Renders links to all routes.
+  </Card>
+  <Card title="Main" icon="layout">
+    Grows to fill remaining height. Renders the active page via `<Outlet />`.
+  </Card>
+  <Card title="Footer" icon="panel-bottom">
+    Fixed at the bottom. Displays the current year and template credit.
+  </Card>
+</Columns>
+
+## Source
+
+```tsx src/components/Layout.tsx
+import { Outlet } from 'react-router-dom';
+import { Navigation } from './Navigation';
+
+export function Layout() {
+    return (
+        <div className="min-h-screen flex flex-col bg-gray-50">
+            <Navigation />
+            <main className="grow container mx-auto p-4 md:p-8">
+                <Outlet />
+            </main>
+            <footer className="bg-gray-200 p-4 text-center text-gray-600 border-t">
+                {new Date().getFullYear()} | Vite React Template by @RonConCoca
+            </footer>
+        </div>
+    );
+}
+```
+
+## How it works
+
+### The Outlet
+
+`<Outlet />` is a React Router placeholder that renders the component matched by the current URL. When a user visits `/features`, React Router replaces `<Outlet />` with `<FeaturesPage />`.
+
+This means you never render `<Layout>` directly in a page component. Instead, you define it as the `element` of the root route in `src/routes/AppRoutes.tsx`:
+
+```tsx src/routes/AppRoutes.tsx
+import type { RouteObject } from 'react-router-dom';
+import { Layout } from '../components/Layout';
+import { HomePage } from '../pages/HomePage';
+import { FeaturesPage } from '../pages/FeaturesPage';
+import { AboutPage } from '../pages/AboutPage';
+
+const AppRoutes: RouteObject[] = [
+    {
+        path: '/',
+        element: <Layout />,          // ← Layout wraps all children
+        children: [
+            { index: true, element: <HomePage /> },
+            { path: 'features', element: <FeaturesPage /> },
+            { path: 'about', element: <AboutPage /> },
+        ],
+    },
+];
+
+export default AppRoutes;
+```
+
+### CSS breakdown
+
+| Element | Classes | Effect |
+|---------|---------|--------|
+| Outer `div` | `min-h-screen flex flex-col bg-gray-50` | Full viewport height, column flex, light gray background |
+| `main` | `grow container mx-auto p-4 md:p-8` | Expands to fill space, centered, responsive padding |
+| `footer` | `bg-gray-200 p-4 text-center text-gray-600 border-t` | Gray bar pinned to bottom with a top border |
+
+### Footer
+
+The footer renders the current year dynamically using `new Date().getFullYear()`, so it stays up to date without manual changes.
+
+## How to customize
+
+### Change the background color
+
+Replace `bg-gray-50` on the outer `div` with any Tailwind background class:
+
+```tsx
+<div className="min-h-screen flex flex-col bg-white">
+```
+
+### Adjust the main content padding
+
+Edit the `p-4 md:p-8` classes on the `main` element:
+
+```tsx
+<main className="grow container mx-auto p-6 md:p-12">
+```
+
+### Update the footer content
+
+Replace the footer's children with your own text or JSX:
+
+```tsx
+<footer className="bg-gray-200 p-4 text-center text-gray-600 border-t">
+    {new Date().getFullYear()} | My App — <a href="https://example.com">Privacy</a>
+</footer>
+```
+
+### Swap out the navigation
+
+The `<Navigation />` component is imported at the top. You can replace it with your own component or extend `Navigation.tsx` directly. See [Navigation](/components/navigation) for details.
+
+<Tip>
+  If you want a sidebar layout instead of a top-bar layout, replace `flex-col` with `flex-row` and move `<Navigation />` to a sidebar element.
+</Tip>
+
+## Adding a new page
+
+When you add a new route to `AppRoutes.tsx` as a child of the root route, `Layout` automatically wraps it. You don't need to touch `Layout.tsx` itself.
+
+<Steps>
+  <Step title="Create the page component">
+    Add a new file in `src/pages/`, for example `src/pages/SettingsPage.tsx`.
+  </Step>
+  <Step title="Register the route">
+    Add the route as a child of the root route in `src/routes/AppRoutes.tsx`:
+
+    ```tsx
+    { path: 'settings', element: <SettingsPage /> },
+    ```
+  </Step>
+  <Step title="Add a nav link">
+    Add a link to the new route in `src/components/Navigation.tsx` so users can reach it. See [Navigation](/components/navigation).
+  </Step>
+</Steps>

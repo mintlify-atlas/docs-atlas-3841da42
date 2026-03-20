@@ -1,0 +1,201 @@
+---
+title: Adding pages
+description: Add a new route and page component to the app in three steps.
+---
+
+The template uses React Router DOM v7 with a declarative route config in `src/routes/AppRoutes.tsx`. Every new page follows the same pattern: create a component in `src/pages/`, register it in the route array, and optionally add a nav link.
+
+## How routing works
+
+All pages share a single `Layout` component (rendered at `/`). Child routes are injected into the layout via React Router's `<Outlet />`. The full config lives in one file:
+
+```tsx src/routes/AppRoutes.tsx
+import type { RouteObject } from 'react-router-dom';
+import { Layout } from '../components/Layout';
+import { HomePage } from '../pages/HomePage';
+import { FeaturesPage } from '../pages/FeaturesPage';
+import { AboutPage } from '../pages/AboutPage';
+
+const AppRoutes: RouteObject[] = [
+    {
+        path: '/',
+        element: <Layout />,
+        children: [
+            { index: true, element: <HomePage /> },
+            { path: 'features', element: <FeaturesPage /> },
+            { path: 'about', element: <AboutPage /> },
+        ],
+    },
+];
+
+export default AppRoutes;
+```
+
+## Add a new page
+
+<Steps>
+  <Step title="Create the page component">
+    Create a new file in `src/pages/`. Name it after the route in PascalCase with a `Page` suffix.
+
+    Here is a complete example following the same patterns as existing pages:
+
+    ```tsx src/pages/ContactPage.tsx
+    import { Button } from '@/components/ui/button'
+    import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+    import { Input } from '@/components/ui/input'
+
+    export function ContactPage() {
+        return (
+            <div className="space-y-6">
+                <div className="space-y-2">
+                    <h1 className="text-2xl sm:text-3xl font-bold leading-tight">Contact</h1>
+                    <p className="text-gray-600 max-w-2xl text-base sm:text-lg">
+                        Get in touch with us.
+                    </p>
+                </div>
+                <Card className="max-w-md">
+                    <CardHeader>
+                        <CardTitle className="text-xl">Send a message</CardTitle>
+                        <CardDescription>We'll respond within 24 hours.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <Input placeholder="Your email" type="email" aria-label="Email" />
+                        <Button>Submit</Button>
+                    </CardContent>
+                </Card>
+            </div>
+        )
+    }
+    ```
+
+    <Tip>
+      Use the `@/` path alias for all imports. Avoid relative paths like `../../components`.
+    </Tip>
+  </Step>
+
+  <Step title="Register the route in AppRoutes.tsx">
+    Import your new component and add a route object to the `children` array:
+
+    ```tsx src/routes/AppRoutes.tsx
+    import type { RouteObject } from 'react-router-dom';
+    import { Layout } from '../components/Layout';
+    import { HomePage } from '../pages/HomePage';
+    import { FeaturesPage } from '../pages/FeaturesPage';
+    import { AboutPage } from '../pages/AboutPage';
+    import { ContactPage } from '../pages/ContactPage'; // [!code ++]
+
+    const AppRoutes: RouteObject[] = [
+        {
+            path: '/',
+            element: <Layout />,
+            children: [
+                { index: true, element: <HomePage /> },
+                { path: 'features', element: <FeaturesPage /> },
+                { path: 'about', element: <AboutPage /> },
+                { path: 'contact', element: <ContactPage /> }, // [!code ++]
+            ],
+        },
+    ];
+
+    export default AppRoutes;
+    ```
+
+    The page is now reachable at `/contact`.
+  </Step>
+
+  <Step title="Add a nav link (optional)">
+    To surface the page in the navigation bar, open `src/components/Navigation.tsx` and add a `<Link>` or `<NavLink>` entry:
+
+    ```tsx src/components/Navigation.tsx
+    import { NavLink } from 'react-router-dom'
+
+    // Inside your nav element:
+    <NavLink to="/contact">Contact</NavLink>
+    ```
+
+    Use `NavLink` instead of `Link` when you want to apply an active class to the current route.
+  </Step>
+</Steps>
+
+## 404 / Not Found route
+
+The route config includes a commented-out wildcard route for handling unmatched URLs:
+
+```tsx src/routes/AppRoutes.tsx
+// Optional: Add a 404/Not Found route
+// {
+//    path: '*',
+//    element: <NotFoundPage />,
+// }
+```
+
+To activate it, create `src/pages/NotFoundPage.tsx` and uncomment the route:
+
+```tsx src/pages/NotFoundPage.tsx
+import { Link } from 'react-router-dom'
+import { Button } from '@/components/ui/button'
+
+export function NotFoundPage() {
+    return (
+        <div className="space-y-4 text-center">
+            <h1 className="text-4xl font-extrabold">404</h1>
+            <p className="text-gray-600">Page not found.</p>
+            <Button asChild>
+                <Link to="/">Go home</Link>
+            </Button>
+        </div>
+    )
+}
+```
+
+```tsx src/routes/AppRoutes.tsx
+children: [
+    { index: true, element: <HomePage /> },
+    { path: 'features', element: <FeaturesPage /> },
+    { path: 'about', element: <AboutPage /> },
+    { path: '*', element: <NotFoundPage /> }, // [!code ++]
+],
+```
+
+<Note>
+  Place the wildcard route (`path: '*'`) last in the `children` array. React Router matches routes in order and the wildcard catches everything that didn't match earlier entries.
+</Note>
+
+## Nested routes
+
+You can nest routes under any existing page by adding a `children` array to that route entry. The parent page component must render `<Outlet />` to inject the child.
+
+```tsx src/routes/AppRoutes.tsx
+import { Outlet } from 'react-router-dom';
+import { SettingsPage } from '../pages/SettingsPage';
+import { ProfilePage } from '../pages/settings/ProfilePage';
+import { SecurityPage } from '../pages/settings/SecurityPage';
+
+// Inside the top-level children array:
+{
+    path: 'settings',
+    element: <SettingsPage />,
+    children: [
+        { path: 'profile', element: <ProfilePage /> },
+        { path: 'security', element: <SecurityPage /> },
+    ],
+},
+```
+
+`SettingsPage` renders the shared settings shell and calls `<Outlet />` where child pages appear:
+
+```tsx src/pages/SettingsPage.tsx
+import { Outlet } from 'react-router-dom'
+
+export function SettingsPage() {
+    return (
+        <div className="space-y-6">
+            <h1 className="text-2xl font-bold">Settings</h1>
+            {/* Child routes render here */}
+            <Outlet />
+        </div>
+    )
+}
+```
+
+This gives you URLs like `/settings/profile` and `/settings/security` with a shared settings layout.

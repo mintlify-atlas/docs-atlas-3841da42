@@ -1,0 +1,207 @@
+---
+title: Button
+description: A polymorphic button component with multiple variants and sizes, built on Radix UI Slot and styled with Tailwind CSS.
+---
+
+The **Button** component supports six visual variants, six sizes, and an `asChild` prop that lets you render any element — such as a React Router `<Link>` — with button styles.
+
+## Import
+
+```tsx
+import { Button, buttonVariants } from '@/components/ui/button'
+```
+
+## Basic usage
+
+```tsx
+<Button>Click me</Button>
+```
+
+## Variants
+
+Use the `variant` prop to control the visual style of the button.
+
+<CodeGroup>
+
+```tsx default
+<Button variant="default">Default</Button>
+```
+
+```tsx destructive
+<Button variant="destructive">Delete</Button>
+```
+
+```tsx outline
+<Button variant="outline">Outline</Button>
+```
+
+```tsx secondary
+<Button variant="secondary">Secondary</Button>
+```
+
+```tsx ghost
+<Button variant="ghost">Ghost</Button>
+```
+
+```tsx link
+<Button variant="link">Link</Button>
+```
+
+</CodeGroup>
+
+| Variant | Description |
+| --- | --- |
+| `default` | Primary action. Filled with `bg-primary`. |
+| `destructive` | Destructive or irreversible actions. Filled with `bg-destructive`. |
+| `outline` | Secondary action with a visible border and transparent background. |
+| `secondary` | Lower-emphasis action. Filled with `bg-secondary`. |
+| `ghost` | No background; hover shows `bg-accent`. Useful for inline or toolbar buttons. |
+| `link` | Renders as styled text with an underline on hover. No background or border. |
+
+## Sizes
+
+Use the `size` prop to control the button's dimensions.
+
+<CodeGroup>
+
+```tsx default
+<Button size="default">Default</Button>
+```
+
+```tsx sm
+<Button size="sm">Small</Button>
+```
+
+```tsx lg
+<Button size="lg">Large</Button>
+```
+
+```tsx icon
+<Button size="icon" aria-label="Settings">
+  <SettingsIcon />
+</Button>
+```
+
+```tsx icon-sm
+<Button size="icon-sm" aria-label="Close">
+  <XIcon />
+</Button>
+```
+
+```tsx icon-lg
+<Button size="icon-lg" aria-label="Menu">
+  <MenuIcon />
+</Button>
+```
+
+</CodeGroup>
+
+| Size | Height | Padding |
+| --- | --- | --- |
+| `default` | `h-9` | `px-4 py-2` |
+| `sm` | `h-8` | `px-3` |
+| `lg` | `h-10` | `px-6` |
+| `icon` | `size-9` (square) | — |
+| `icon-sm` | `size-8` (square) | — |
+| `icon-lg` | `size-10` (square) | — |
+
+## The `asChild` prop
+
+Set `asChild` to `true` to merge the button's props and styles onto its immediate child element instead of rendering a `<button>` tag. This uses the [Radix UI `Slot`](https://www.radix-ui.com/primitives/docs/utilities/slot) primitive.
+
+This is the recommended pattern for rendering a button that navigates to a route:
+
+```tsx
+import { Link } from 'react-router-dom'
+import { Button } from '@/components/ui/button'
+
+<Button asChild size="lg">
+  <Link to="/features">Explore Features</Link>
+</Button>
+
+<Button asChild variant="outline" size="lg">
+  <Link to="/about">About Template</Link>
+</Button>
+```
+
+The rendered output is an `<a>` element (from React Router's `<Link>`) that carries all button Tailwind classes. No nested `<button>` is created.
+
+<Note>
+  When using `asChild`, the child element must accept `className` and event handler props. React Router's `<Link>` and standard HTML elements both satisfy this requirement.
+</Note>
+
+## `buttonVariants` utility
+
+Use the exported `buttonVariants` function to apply button styles to elements that you cannot wrap with `<Button>`, such as elements rendered by third-party libraries.
+
+```tsx
+import { buttonVariants } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
+
+<a
+  href="/docs"
+  className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}
+>
+  Read the docs
+</a>
+```
+
+`buttonVariants` is produced by `class-variance-authority` and accepts the same `variant` and `size` options as the `<Button>` component.
+
+## Props
+
+All native `<button>` HTML attributes are accepted via prop spreading. The component-specific props are:
+
+<ParamField path="variant" type="string" default="default">
+  Visual style. One of `default`, `destructive`, `outline`, `secondary`, `ghost`, `link`.
+</ParamField>
+
+<ParamField path="size" type="string" default="default">
+  Dimensions. One of `default`, `sm`, `lg`, `icon`, `icon-sm`, `icon-lg`.
+</ParamField>
+
+<ParamField path="asChild" type="boolean" default="false">
+  When `true`, renders the Radix `Slot` component, merging button props onto the child element instead of creating a `<button>` tag.
+</ParamField>
+
+<ParamField path="className" type="string">
+  Additional Tailwind classes merged via `cn()` (clsx + tailwind-merge). Use this to extend or override default styles.
+</ParamField>
+
+<ParamField path="disabled" type="boolean">
+  Disables the button. Applies `pointer-events-none` and `opacity-50` via Tailwind. Passed through to the underlying element.
+</ParamField>
+
+## Real-world examples
+
+### Ghost button to clear a search field
+
+```tsx
+{query && (
+  <Button variant="ghost" onClick={() => setQuery('')}>
+    Clear
+  </Button>
+)}
+```
+
+### Navigation buttons on the home page
+
+```tsx
+import { Link } from 'react-router-dom'
+import { Button } from '@/components/ui/button'
+
+<Button asChild size="lg">
+  <Link to="/features">Explore Features</Link>
+</Button>
+
+<Button asChild variant="outline" size="lg">
+  <Link to="/about">About Template</Link>
+</Button>
+```
+
+## Accessibility
+
+- **Focus ring** — A visible `ring` appears on keyboard focus via `focus-visible:ring-ring/50 focus-visible:ring-[3px]`, satisfying WCAG 2.4.7.
+- **Disabled state** — `disabled:pointer-events-none disabled:opacity-50` prevents interaction and provides a visual cue.
+- **Invalid state** — `aria-invalid` on the button triggers a `ring-destructive` outline, useful for form error states.
+- **Icon buttons** — Always provide an `aria-label` when using `size="icon"`, `size="icon-sm"`, or `size="icon-lg"` because there is no visible text label.

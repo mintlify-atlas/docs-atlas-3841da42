@@ -1,0 +1,213 @@
+---
+title: Card
+description: A composable card component family for displaying grouped content with a header, body, and footer.
+---
+
+The **Card** component family provides a flexible container for presenting grouped content. It is composed of seven sub-components that you assemble together: `Card`, `CardHeader`, `CardTitle`, `CardDescription`, `CardAction`, `CardContent`, and `CardFooter`.
+
+## Import
+
+```tsx
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardAction,
+  CardContent,
+  CardFooter,
+} from '@/components/ui/card'
+```
+
+## Basic usage
+
+```tsx
+<Card>
+  <CardHeader>
+    <CardTitle>Card title</CardTitle>
+    <CardDescription>A short description of this card.</CardDescription>
+  </CardHeader>
+  <CardContent>
+    <p>Main content goes here.</p>
+  </CardContent>
+</Card>
+```
+
+## Sub-components
+
+### `Card`
+
+The outermost wrapper. Renders a `<div>` with a rounded border, subtle shadow, and a vertical flex layout with `gap-6` between sections.
+
+```tsx
+<Card className="overflow-hidden">
+  {/* children */}
+</Card>
+```
+
+Default classes: `bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm`
+
+### `CardHeader`
+
+Container for the card's title, description, and optional action. Uses a CSS grid layout that automatically adjusts to two columns when a `CardAction` is present.
+
+```tsx
+<CardHeader>
+  <CardTitle>What you get</CardTitle>
+  <CardDescription>Essential tooling and a scalable structure.</CardDescription>
+</CardHeader>
+```
+
+Default classes: `@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-2 px-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6`
+
+### `CardTitle`
+
+The primary heading of the card. Renders a `<div>` with `font-semibold leading-none`.
+
+```tsx
+<CardTitle className="text-xl font-semibold">Feature name</CardTitle>
+```
+
+### `CardDescription`
+
+Secondary text below the title. Rendered in `text-muted-foreground text-sm`.
+
+```tsx
+<CardDescription className="text-gray-700">
+  A concise explanation of this feature.
+</CardDescription>
+```
+
+### `CardAction`
+
+Positions its content in the top-right corner of the `CardHeader` using CSS grid (`col-start-2 row-span-2 row-start-1 self-start justify-self-end`). Use this for a button, badge, or icon that acts on the card.
+
+```tsx
+<CardHeader>
+  <CardTitle>Notifications</CardTitle>
+  <CardDescription>Your recent alerts.</CardDescription>
+  <CardAction>
+    <Button size="sm" variant="outline">Mark all read</Button>
+  </CardAction>
+</CardHeader>
+```
+
+<Note>
+  `CardAction` only produces the correct grid layout when it is a direct child of `CardHeader`. The layout is triggered by the `has-data-[slot=card-action]` CSS selector on `CardHeader`.
+</Note>
+
+### `CardContent`
+
+The main body of the card. Adds `px-6` horizontal padding to align with the header.
+
+```tsx
+<CardContent>
+  <p>Any content — text, lists, forms, charts, etc.</p>
+</CardContent>
+```
+
+### `CardFooter`
+
+A flex row at the bottom of the card. Use it for actions or metadata. Adds `px-6` horizontal padding.
+
+```tsx
+<CardFooter>
+  <Button>Save</Button>
+  <Button variant="ghost">Cancel</Button>
+</CardFooter>
+```
+
+## Props
+
+All sub-components accept the same two prop types:
+
+<ParamField path="className" type="string">
+  Additional Tailwind classes merged via `cn()`. Use this to extend or override the default styles.
+</ParamField>
+
+<ParamField path="...props" type="React.ComponentProps<'div'>"> 
+  All standard HTML `<div>` attributes — `id`, `style`, `aria-*`, `data-*`, event handlers, and so on.
+</ParamField>
+
+## Complete composition example
+
+```tsx
+<Card>
+  <CardHeader>
+    <CardTitle>Account settings</CardTitle>
+    <CardDescription>Manage your profile and preferences.</CardDescription>
+    <CardAction>
+      <Button size="sm" variant="outline">Edit</Button>
+    </CardAction>
+  </CardHeader>
+  <CardContent>
+    <p>Your display name, email, and avatar are shown here.</p>
+  </CardContent>
+  <CardFooter>
+    <Button>Save changes</Button>
+  </CardFooter>
+</Card>
+```
+
+## Real-world examples
+
+### Feature grid (from `FeaturesPage.tsx`)
+
+Cards in a responsive grid with a left accent border:
+
+```tsx
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+
+<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+  {filtered.map((feature, index) => (
+    <Card key={index} className={`shadow-sm border-l-4 ${feature.tailwindClass}`}>
+      <CardHeader>
+        <CardTitle className="text-xl font-semibold">{feature.title}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <CardDescription className="text-gray-700">
+          {feature.description}
+        </CardDescription>
+      </CardContent>
+    </Card>
+  ))}
+</div>
+```
+
+### Card with header and content (from `HomePage.tsx`)
+
+```tsx
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+
+<Card className="overflow-hidden">
+  <CardHeader>
+    <CardTitle className="text-xl sm:text-2xl">What you get</CardTitle>
+    <CardDescription className="text-sm sm:text-base">
+      Essential tooling and a scalable structure.
+    </CardDescription>
+  </CardHeader>
+  <CardContent>
+    {/* Additional content */}
+  </CardContent>
+</Card>
+```
+
+## Customizing styles
+
+Every sub-component merges your `className` after its defaults using `cn()` (powered by clsx and tailwind-merge). This means you can safely override any default class:
+
+```tsx
+{/* Remove the default shadow and add a thick left border */}
+<Card className="shadow-none border-l-4 border-indigo-500">
+  ...
+</Card>
+
+{/* Increase the title size */}
+<CardTitle className="text-2xl">
+  Larger title
+</CardTitle>
+```
+
+<Tip>
+  Tailwind Merge resolves conflicts automatically. If you pass `shadow-none`, it overrides `shadow-sm` without duplicating the property.
+</Tip>

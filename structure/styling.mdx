@@ -1,0 +1,132 @@
+---
+title: Styling
+description: How Tailwind CSS v4, the cn() utility, and shadcn/ui work together to style the template.
+---
+
+The template uses Tailwind CSS v4 for all styling, the `cn()` utility for composing class names, and shadcn/ui's CSS variable system for component theming. There is no separate CSS framework, no CSS Modules, and no styled-components.
+
+## Tailwind CSS v4 setup
+
+Tailwind v4 integrates directly as a Vite plugin — no `tailwind.config.js` file needed:
+
+```ts vite.config.ts
+import tailwindcss from '@tailwindcss/vite'
+
+export default defineConfig({
+  plugins: [
+    react(),
+    tailwindcss(), // zero-config Tailwind v4
+  ],
+})
+```
+
+The plugin scans your source files automatically and generates only the CSS classes you use. Configuration (custom colors, fonts, breakpoints) goes in `src/index.css` using Tailwind's `@theme` directive instead of a JavaScript config file.
+
+<Tip>
+  Tailwind v4 uses `@import "tailwindcss"` in `src/index.css` instead of the three `@tailwind` directives from v3. If you're migrating an existing project, update that import first.
+</Tip>
+
+## The `cn()` utility
+
+`src/lib/utils.ts` exports a single helper that merges Tailwind classes safely:
+
+```ts src/lib/utils.ts
+import { clsx, type ClassValue } from "clsx"
+import { twMerge } from "tailwind-merge"
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs))
+}
+```
+
+- **`clsx`** — handles conditional class expressions (objects, arrays, falsy values).
+- **`tailwind-merge`** — resolves Tailwind class conflicts by keeping only the last class in a group (for example, `p-2` and `p-4` together become just `p-4`).
+
+### Using `cn()` in components
+
+All shadcn/ui primitives accept a `className` prop and pass it through `cn()`. Here is how `button.tsx` applies it:
+
+```tsx src/components/ui/button.tsx
+import { cn } from "@/lib/utils"
+
+// Inside the component:
+<button
+  className={cn(
+    // base styles
+    "inline-flex items-center justify-center rounded-md text-sm font-medium",
+    // variant styles resolved from cva()
+    variantClasses,
+    // caller-supplied overrides
+    className
+  )}
+  {...props}
+/>
+```
+
+You can override any default style by passing a `className` prop — `twMerge` ensures conflicting utilities are resolved correctly:
+
+```tsx
+// Renders with rounded-full instead of the default rounded-md
+<Button className="rounded-full px-8">
+  Custom shape
+</Button>
+```
+
+## shadcn/ui theming
+
+shadcn/ui components are styled with Tailwind utility classes and a set of **CSS variables** defined in `src/index.css`. The configuration is managed by `components.json`:
+
+```json components.json
+{
+  "style": "new-york",
+  "tailwind": {
+    "css": "src/index.css",
+    "baseColor": "neutral",
+    "cssVariables": true
+  }
+}
+```
+
+### Style variant: `new-york`
+
+The `new-york` variant uses slightly more opinionated defaults than the `default` variant:
+- Tighter padding and smaller border radii on form elements.
+- Solid default button backgrounds instead of ghost-style.
+- Sharper visual hierarchy overall.
+
+### Base color: `neutral`
+
+The `neutral` base color seeds the CSS variable palette with gray-based values. Variables like `--color-background`, `--color-foreground`, and `--color-primary` are generated from this palette and injected into `src/index.css`.
+
+To change the theme color, update `baseColor` in `components.json` and re-run `npx shadcn init` — or edit the CSS variables in `src/index.css` directly.
+
+### CSS variables and `cssVariables: true`
+
+With `cssVariables: true`, all component colors reference CSS variables instead of hardcoded Tailwind color names. This means you can switch the entire color scheme by updating the variables in one place, including full dark mode support.
+
+## Animation utilities
+
+The template includes `tw-animate-css` as a dev dependency, which provides a set of animation utility classes (fade, slide, zoom, etc.) compatible with Tailwind's syntax. Import the animations you need directly in your component class strings:
+
+```tsx
+<div className="animate-fade-in">
+  Content that fades in
+</div>
+```
+
+## Best practices
+
+<AccordionGroup>
+  <Accordion title="Use Tailwind utilities, not ad-hoc CSS">
+    Write all styles as Tailwind classes in JSX. Keep `src/index.css` for base layer resets, CSS variable declarations, and `@theme` customizations only. Avoid writing one-off selectors like `.my-button { padding: 8px }`.
+  </Accordion>
+  <Accordion title="Use cn() for all className composition">
+    Never concatenate class strings with template literals (`\`base ${extra}\``). Always pass them through `cn()` so that conflicting Tailwind utilities are resolved correctly and falsy values are filtered out.
+  </Accordion>
+  <Accordion title="Extend shadcn/ui components, don't fork them">
+    Pass a `className` prop to override individual styles. Only edit files in `src/components/ui/` when you need to change the default behavior for every usage across the app — not for one-off adjustments.
+  </Accordion>
+  <Accordion title="Add new components via the shadcn CLI">
+    Run `npx shadcn add <component>` to add new primitives. The CLI reads `components.json` and drops the file into `src/components/ui/` with the correct imports already set up.
+  </Accordion>
+</AccordionGroup>

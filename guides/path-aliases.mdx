@@ -1,0 +1,139 @@
+---
+title: Path aliases
+description: Use the @/ alias to import from anywhere in src/ without relative path traversal.
+---
+
+The template configures a single path alias — `@/` — that maps to the `src/` directory. This lets you write clean, location-independent imports throughout the codebase.
+
+## What the alias does
+
+Instead of traversing the directory tree with relative paths:
+
+```tsx
+// Without the alias — fragile and hard to read
+import { Button } from '../../../components/ui/button'
+```
+
+You write:
+
+```tsx
+// With the alias — clear and stable
+import { Button } from '@/components/ui/button'
+```
+
+Both resolve to the same file. The alias form stays valid no matter where you move the importing file.
+
+## Where it's configured
+
+The alias is declared in two places so both the Vite bundler and the TypeScript compiler understand it.
+
+### Vite configuration
+
+Vite resolves the alias at build time and during the dev server:
+
+```ts vite.config.ts
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react-swc'
+import tailwindcss from '@tailwindcss/vite'
+import path from 'path'
+
+export default defineConfig({
+  plugins: [react(), tailwindcss()],
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "./src"),
+    },
+  },
+})
+```
+
+### TypeScript configuration
+
+The `paths` field in `tsconfig.app.json` tells the TypeScript compiler where `@/` points, enabling type checking and editor auto-complete:
+
+```json tsconfig.app.json
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  }
+}
+```
+
+Both entries are required. Vite handles runtime resolution; TypeScript handles types and editor tooling. If you only update one, you'll get either build errors or editor errors.
+
+## How to use it
+
+Prefix any import from the `src/` directory with `@/`:
+
+```tsx
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import { cn } from '@/lib/utils'
+import { features } from '@/data/featureData'
+import type { SomeType } from '@/types/index'
+```
+
+The alias resolves the leading `@/` to `src/`, so `@/components/ui/button` becomes `src/components/ui/button`.
+
+<Note>
+  The `@/` alias only works for files inside `src/`. Files at the project root (like `vite.config.ts` itself) must still use regular relative or Node.js `path` imports.
+</Note>
+
+## Add more aliases
+
+If you want additional aliases (for example, a shorthand for a deeply nested directory), add entries to both config files.
+
+<Steps>
+  <Step title="Add the alias to vite.config.ts">
+    Extend the `alias` object with your new mapping:
+
+    ```ts vite.config.ts
+    resolve: {
+      alias: {
+        "@": path.resolve(__dirname, "./src"),
+        "@assets": path.resolve(__dirname, "./src/assets"), // [!code ++]
+      },
+    },
+    ```
+  </Step>
+
+  <Step title="Add the alias to tsconfig.app.json">
+    Add a matching entry in `paths`:
+
+    ```json tsconfig.app.json
+    {
+      "compilerOptions": {
+        "baseUrl": ".",
+        "paths": {
+          "@/*": ["./src/*"],
+          "@assets/*": ["./src/assets/*"] 
+        }
+      }
+    }
+    ```
+  </Step>
+
+  <Step title="Use the new alias">
+    Import using your new prefix:
+
+    ```tsx
+    import logo from '@assets/logo.svg'
+    ```
+  </Step>
+</Steps>
+
+## Why use aliases
+
+| Problem with relative imports | Benefit of aliases |
+|-------------------------------|--------------------|
+| Break when you move a file | Stable across refactors |
+| Hard to read (`../../../`) | Clear and self-documenting |
+| IDE auto-import uses relative paths | Editors respect `paths` and suggest aliases |
+| Inconsistent across the codebase | One canonical import form for every module |
+
+<Tip>
+  Most editors (VS Code, WebStorm) automatically use the `@/` alias when generating imports via auto-import, as long as `tsconfig.app.json` contains the `paths` entry.
+</Tip>

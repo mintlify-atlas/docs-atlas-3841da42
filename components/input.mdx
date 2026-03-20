@@ -1,0 +1,161 @@
+---
+title: Input
+description: A ref-forwarding text input component that accepts all native HTML input attributes and supports custom styling via className.
+---
+
+The **Input** component wraps a native `<input>` element with consistent default styling — height, border, rounded corners, and a focus ring — while forwarding a `ref` and accepting every standard HTML input attribute.
+
+## Import
+
+```tsx
+import { Input } from '@/components/ui/input'
+```
+
+## Basic usage
+
+```tsx
+<Input placeholder="Enter a value" />
+```
+
+## TypeScript type
+
+`Input` accepts all props from `React.InputHTMLAttributes<HTMLInputElement>`. You do not need a custom props interface — any attribute you would put on a native `<input>` works here.
+
+```tsx
+type InputProps = React.InputHTMLAttributes<HTMLInputElement>
+```
+
+## Default behavior
+
+- **`type`** defaults to `"text"` if you omit it.
+- A `ref` is forwarded via `React.forwardRef`, so you can attach a ref directly:
+
+```tsx
+import { useRef } from 'react'
+import { Input } from '@/components/ui/input'
+
+function SearchBar() {
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  return <Input ref={inputRef} placeholder="Search..." />
+}
+```
+
+## Default styling
+
+The following Tailwind classes are applied by default:
+
+| Category | Classes |
+| --- | --- |
+| Layout | `flex h-9 w-full` |
+| Shape | `rounded-md border` |
+| Background | `bg-white` |
+| Spacing | `px-3 py-1.5` |
+| Typography | `text-sm` |
+| Placeholder | `placeholder:text-gray-400` |
+| Focus | `focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500` |
+| Disabled | `disabled:cursor-not-allowed disabled:opacity-50` |
+
+## Customizing with `className`
+
+Pass a `className` to extend or override defaults. Classes are merged with `cn()` (clsx + tailwind-merge), so Tailwind conflicts are resolved automatically:
+
+```tsx
+{/* Full-width search input with a larger height */}
+<Input
+  className="h-11 text-base"
+  placeholder="Search..."
+/>
+
+{/* Error state with a red border */}
+<Input
+  className="border-red-500 focus-visible:ring-red-500"
+  aria-invalid="true"
+  placeholder="Invalid value"
+/>
+```
+
+## Input types
+
+Because all HTML input attributes pass through, you can use any `type` value:
+
+```tsx
+<Input type="email" placeholder="you@example.com" />
+<Input type="password" placeholder="Password" />
+<Input type="number" min={0} max={100} />
+<Input type="file" accept="image/*" />
+```
+
+## Disabled state
+
+Set the `disabled` attribute to prevent interaction. The input renders with `cursor-not-allowed` and `opacity-50`:
+
+```tsx
+<Input disabled placeholder="Not editable" />
+```
+
+## Props
+
+<ParamField path="type" type="string" default="text">
+  The HTML input type. Accepts any valid `<input type>` value — `text`, `email`, `password`, `number`, `file`, and so on.
+</ParamField>
+
+<ParamField path="className" type="string">
+  Additional Tailwind classes merged via `cn()`. Use this to extend or override default styles.
+</ParamField>
+
+<ParamField path="ref" type="React.Ref<HTMLInputElement>">
+  A forwarded ref. Attach it to access the underlying `<input>` DOM node imperatively.
+</ParamField>
+
+<ParamField path="disabled" type="boolean">
+  Disables the input and applies `cursor-not-allowed opacity-50`.
+</ParamField>
+
+<ParamField path="placeholder" type="string">
+  Placeholder text shown when the field is empty. Styled with `text-gray-400`.
+</ParamField>
+
+<ParamField path="...props" type="React.InputHTMLAttributes<HTMLInputElement>">
+  All remaining native input attributes — `value`, `onChange`, `onBlur`, `aria-*`, `data-*`, `id`, `name`, `required`, and so on.
+</ParamField>
+
+## Real-world example
+
+### Search input with controlled state (from `FeaturesPage.tsx`)
+
+```tsx
+import { useState } from 'react'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+
+export function FeaturesPage() {
+  const [query, setQuery] = useState('')
+
+  return (
+    <div>
+      <Input
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        placeholder="Search features..."
+        aria-label="Search features"
+      />
+      {query && (
+        <Button variant="ghost" onClick={() => setQuery('')}>
+          Clear
+        </Button>
+      )}
+    </div>
+  )
+}
+```
+
+## Accessibility
+
+- **Visible label** — Pair the input with a `<label>` using a matching `htmlFor`/`id` or use `aria-label` when a visible label is not present, as shown in the search example above.
+- **Disabled state** — `disabled:cursor-not-allowed` and `disabled:opacity-50` provide both a visual and cursor cue.
+- **Focus ring** — `focus-visible:ring-2 focus-visible:ring-indigo-500` produces a keyboard-visible focus indicator, satisfying WCAG 2.4.7. The ring only appears on keyboard focus, not on mouse click.
+
+<Note>
+  Always provide an accessible label for every input. Use a `<label>` element or `aria-label` when a visible label is not shown.
+</Note>

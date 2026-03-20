@@ -1,0 +1,202 @@
+---
+title: Deploying
+description: Build and deploy the app to production on any static hosting platform.
+---
+
+This app is a static SPA — `npm run build` produces a `dist/` folder that you can deploy to any static host.
+
+## Build the app
+
+<Steps>
+  <Step title="Run the build command">
+    ```bash
+    npm run build
+    ```
+
+    This runs `tsc -b` to type-check your project, then bundles everything with Vite. Output goes to the `dist/` directory.
+  </Step>
+
+  <Step title="Preview the production build locally">
+    ```bash
+    npm run preview
+    ```
+
+    Vite serves the `dist/` folder at `http://localhost:4173` so you can verify everything works before deploying.
+  </Step>
+</Steps>
+
+<Warning>
+  Because the app uses React Router with the HTML5 History API, your host must serve `index.html` for every route — not just `/`. Without this, refreshing a page like `/features` returns a 404. Each platform section below explains exactly how to configure this.
+</Warning>
+
+## Deployment options
+
+<Tabs>
+  <Tab title="Netlify">
+    **Option 1 — drag and drop**
+
+    <Steps>
+      <Step title="Build the app">
+        ```bash
+        npm run build
+        ```
+      </Step>
+      <Step title="Drop the dist/ folder">
+        Go to [netlify.com/drop](https://netlify.com/drop) and drag your `dist/` folder onto the page.
+      </Step>
+    </Steps>
+
+    **Option 2 — connect a GitHub repo**
+
+    <Steps>
+      <Step title="Import your repo">
+        In the Netlify dashboard, click **Add new site** → **Import an existing project** and connect your GitHub repository.
+      </Step>
+      <Step title="Configure build settings">
+        Set the following:
+        - **Build command**: `npm run build`
+        - **Publish directory**: `dist`
+      </Step>
+      <Step title="Deploy">
+        Click **Deploy site**. Netlify rebuilds on every push to the main branch.
+      </Step>
+    </Steps>
+
+    **SPA routing — required step**
+
+    Create the file `public/_redirects` with this content:
+
+    ```text public/_redirects
+    /* /index.html 200
+    ```
+
+    This tells Netlify to serve `index.html` for every path, which lets React Router handle routing on the client.
+  </Tab>
+
+  <Tab title="Vercel">
+    <Steps>
+      <Step title="Import your repo">
+        Go to [vercel.com](https://vercel.com), click **Add New Project**, and import your GitHub repository.
+      </Step>
+      <Step title="Configure build settings">
+        Select **Vite** as the framework preset. Vercel auto-populates:
+        - **Build command**: `npm run build`
+        - **Output directory**: `dist`
+      </Step>
+      <Step title="Deploy">
+        Click **Deploy**. Vercel automatically handles SPA routing — no redirect configuration needed.
+      </Step>
+    </Steps>
+
+    <Tip>
+      Vercel detects the Vite framework automatically and configures SPA routing for you. You do not need to add any redirect files.
+    </Tip>
+  </Tab>
+
+  <Tab title="GitHub Pages">
+    <Steps>
+      <Step title="Build the app">
+        ```bash
+        npm run build
+        ```
+      </Step>
+
+      <Step title="Set the base path (subdirectory deploys only)">
+        If you are deploying to `username.github.io/repo-name` rather than a custom domain, set the `base` option in `vite.config.ts`:
+
+        ```ts vite.config.ts
+        export default defineConfig({
+          base: '/repo-name/',
+          // ...rest of config
+        })
+        ```
+
+        Skip this step if you are using a custom domain at the root.
+      </Step>
+
+      <Step title="Handle SPA routing with a 404.html trick">
+        Copy `dist/index.html` to `dist/404.html`. GitHub Pages serves `404.html` when a path is not found, and React Router takes over from there.
+
+        ```bash
+        cp dist/index.html dist/404.html
+        ```
+      </Step>
+
+      <Step title="Deploy to the gh-pages branch">
+        Push the contents of `dist/` to the `gh-pages` branch. The easiest way is with the `gh-pages` npm package:
+
+        ```bash
+        npm install --save-dev gh-pages
+        npx gh-pages -d dist
+        ```
+      </Step>
+
+      <Step title="Enable GitHub Pages">
+        In your repository settings, go to **Pages** and set the source to the `gh-pages` branch.
+      </Step>
+    </Steps>
+  </Tab>
+
+  <Tab title="Cloudflare Pages">
+    <Steps>
+      <Step title="Connect your repo">
+        In the Cloudflare dashboard, go to **Workers & Pages** → **Create** → **Pages** and connect your GitHub repository.
+      </Step>
+
+      <Step title="Configure build settings">
+        Set the following:
+        - **Build command**: `npm run build`
+        - **Build output directory**: `dist`
+      </Step>
+
+      <Step title="Add an SPA redirect rule">
+        Create the file `public/_redirects` with this content:
+
+        ```text public/_redirects
+        /* /index.html 200
+        ```
+
+        Cloudflare Pages respects the same `_redirects` format as Netlify.
+      </Step>
+
+      <Step title="Deploy">
+        Click **Save and Deploy**. Cloudflare Pages rebuilds on every push.
+      </Step>
+    </Steps>
+  </Tab>
+
+  <Tab title="Other static hosts">
+    Any host that can serve static files can deploy this app.
+
+    <Steps>
+      <Step title="Build the app">
+        ```bash
+        npm run build
+        ```
+      </Step>
+
+      <Step title="Upload the dist/ folder">
+        Upload the entire contents of `dist/` to your hosting provider.
+      </Step>
+
+      <Step title="Configure 404 fallback for SPA routing">
+        Configure your host to serve `index.html` in response to any 404 request. The exact setting varies by platform — look for options like "custom 404 page", "error document", or "fallback document".
+      </Step>
+    </Steps>
+
+    <Note>
+      Static assets in the `public/` directory (like `vite.svg`) are copied to `dist/` during the build and served at the root path.
+    </Note>
+  </Tab>
+</Tabs>
+
+## Next steps
+
+<Columns cols={2}>
+  <Card title="Troubleshooting" icon="wrench" href="/guides/troubleshooting">
+    Fix common issues with routing, imports, and build errors.
+  </Card>
+  <Card title="Adding pages" icon="file-plus" href="/guides/adding-pages">
+    Add new routes before you ship.
+  </Card>
+</Columns>

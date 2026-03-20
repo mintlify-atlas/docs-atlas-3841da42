@@ -1,0 +1,222 @@
+---
+title: Adding components
+description: Three ways to add new UI components — via the shadcn/ui CLI, by writing a primitive manually, or by composing existing primitives.
+---
+
+The template organizes components in two directories:
+
+- `src/components/ui/` — low-level primitives (Button, Card, Input)
+- `src/components/` — composite components that combine primitives (Layout, Navigation)
+
+Choose the approach that fits your component:
+
+<Columns cols={3}>
+  <Card title="shadcn/ui CLI" icon="terminal">
+    Add a ready-made, accessible primitive from the shadcn/ui registry in one command.
+  </Card>
+  <Card title="Custom primitive" icon="code">
+    Write a new low-level component in `src/components/ui/` following the existing pattern.
+  </Card>
+  <Card title="Composite component" icon="puzzle-piece">
+    Combine multiple primitives into a larger component in `src/components/`.
+  </Card>
+</Columns>
+
+## Option A: Add a shadcn/ui component via CLI
+
+The project is pre-configured with a `components.json` that points the shadcn/ui CLI at the right directories:
+
+```json components.json
+{
+  "style": "new-york",
+  "rsc": false,
+  "tsx": true,
+  "tailwind": {
+    "css": "src/index.css",
+    "baseColor": "neutral",
+    "cssVariables": true
+  },
+  "iconLibrary": "lucide",
+  "aliases": {
+    "components": "@/components",
+    "utils": "@/lib/utils",
+    "ui": "@/components/ui",
+    "lib": "@/lib",
+    "hooks": "@/hooks"
+  }
+}
+```
+
+To add a component, run:
+
+```bash
+npx shadcn@latest add <component-name>
+```
+
+For example, to add a `badge` component:
+
+```bash
+npx shadcn@latest add badge
+```
+
+The CLI writes the component file to `src/components/ui/badge.tsx` and installs any required dependencies. Import it using the `@/` alias:
+
+```tsx
+import { Badge } from '@/components/ui/badge'
+```
+
+<Tip>
+  Run `npx shadcn@latest add --help` to see all available components, or browse the full registry at the shadcn/ui docs.
+</Tip>
+
+## Option B: Create a custom primitive
+
+Follow the same structure as the existing `Button` component when building a new low-level primitive.
+
+### The `cn()` utility
+
+All components use `cn()` from `@/lib/utils` to merge Tailwind classes safely. It combines `clsx` and `tailwind-merge` so conflicting utility classes resolve correctly:
+
+```tsx
+import { cn } from '@/lib/utils'
+
+// Usage:
+<div className={cn('base-class', conditionalClass, className)} />
+```
+
+Always accept and forward a `className` prop so callers can extend styles without forking the component.
+
+### Simple custom primitive
+
+Here is a `Badge` primitive written from scratch following the project conventions:
+
+```tsx src/components/ui/badge.tsx
+import * as React from 'react'
+import { cva, type VariantProps } from 'class-variance-authority'
+import { cn } from '@/lib/utils'
+
+const badgeVariants = cva(
+  'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold transition-colors',
+  {
+    variants: {
+      variant: {
+        default: 'bg-gray-900 text-white',
+        outline: 'border border-gray-300 text-gray-700',
+        success: 'bg-green-100 text-green-800',
+      },
+    },
+    defaultVariants: {
+      variant: 'default',
+    },
+  }
+)
+
+export interface BadgeProps
+  extends React.HTMLAttributes<HTMLSpanElement>,
+    VariantProps<typeof badgeVariants> {}
+
+function Badge({ className, variant, ...props }: BadgeProps) {
+  return (
+    <span
+      data-slot="badge"
+      className={cn(badgeVariants({ variant }), className)}
+      {...props}
+    />
+  )
+}
+
+export { Badge, badgeVariants }
+```
+
+Key patterns to follow:
+
+- Use `cva()` from `class-variance-authority` to define variants
+- Extend the relevant HTML element's props interface (e.g., `React.HTMLAttributes<HTMLSpanElement>`)
+- Add `VariantProps<typeof yourVariants>` to expose variant props with full type safety
+- Apply `data-slot="component-name"` for consistent targeting in tests and CSS
+- Spread `...props` after your own props so all native HTML attributes pass through
+- Export both the component and the variants function
+
+### Using variants in a component
+
+Once the component is written, import and use it like any other primitive:
+
+```tsx
+import { Badge } from '@/components/ui/badge'
+
+<Badge>Default</Badge>
+<Badge variant="outline">Outline</Badge>
+<Badge variant="success">Active</Badge>
+```
+
+## Option C: Create a composite component
+
+Composite components live in `src/components/` (not `src/components/ui/`). They import and combine primitives to build higher-level UI.
+
+Here is an example `FeatureCard` that composes `Card`, `CardHeader`, `CardTitle`, and `CardContent`:
+
+```tsx src/components/FeatureCard.tsx
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { cn } from '@/lib/utils'
+
+interface FeatureCardProps {
+  title: string
+  description: string
+  accentClass?: string
+  className?: string
+}
+
+export function FeatureCard({
+  title,
+  description,
+  accentClass = 'border-indigo-500',
+  className,
+}: FeatureCardProps) {
+  return (
+    <Card className={cn('shadow-sm border-l-4', accentClass, className)}>
+      <CardHeader>
+        <CardTitle className="text-xl font-semibold">{title}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <p className="text-gray-700 text-sm">{description}</p>
+      </CardContent>
+    </Card>
+  )
+}
+```
+
+Import and render it from any page:
+
+```tsx
+import { FeatureCard } from '@/components/FeatureCard'
+
+<FeatureCard
+  title="TypeScript"
+  description="Strict type checking across the entire codebase."
+  accentClass="border-blue-500"
+/>
+```
+
+<Note>
+  Composite components use the `@/components/ui/*` import path, not relative paths. This keeps imports consistent even if you move files later.
+</Note>
+
+## Accepting and merging `className` props
+
+Every component should forward a `className` prop so callers can override or extend styles:
+
+```tsx
+function MyComponent({
+  className,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement>) {
+  return (
+    <div
+      className={cn('default-styles', className)}
+      {...props}
+    />
+  )
+}
+```
+
+Using `cn()` here is important. Without it, passing `className` would concatenate strings, and conflicting Tailwind utilities (like two `text-` values) would both appear in the output — only the last one would win based on CSS specificity, not the order you specified.

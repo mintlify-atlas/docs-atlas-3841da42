@@ -1,0 +1,121 @@
+---
+title: 'Navigation'
+description: 'The Navigation component renders the top navigation bar with client-side links to all routes in the app.'
+keywords: ['navigation', 'navbar', 'links', 'routing', 'react-router-dom']
+---
+
+`Navigation` is the top-level navigation bar used by [Layout](/components/layout). It renders links to the three main routes: `/`, `/features`, and `/about`. All links use React Router for client-side navigation — no full page reloads.
+
+## Source location
+
+```
+src/components/Navigation.tsx
+```
+
+## How it works
+
+`Navigation` imports `Link` (or `NavLink`) from `react-router-dom` to render route links. Because these are client-side links, clicking them swaps the matched child inside `<Outlet />` without reloading the page.
+
+The component is rendered at the top of the `Layout` shell, above the `<main>` content area:
+
+```tsx src/components/Layout.tsx
+export function Layout() {
+    return (
+        <div className="min-h-screen flex flex-col bg-gray-50">
+            <Navigation />          {/* ← rendered here, above main */}
+            <main className="grow container mx-auto p-4 md:p-8">
+                <Outlet />
+            </main>
+            ...
+        </div>
+    );
+}
+```
+
+## Routes covered
+
+| Label | Path | Page component |
+|-------|------|----------------|
+| Home | `/` | `HomePage` |
+| Features | `/features` | `FeaturesPage` |
+| About | `/about` | `AboutPage` |
+
+These paths correspond exactly to the child routes defined in `src/routes/AppRoutes.tsx`.
+
+## Relationship with AppRoutes
+
+Navigation links and route definitions must stay in sync. The rule is simple:
+
+- Every path in `AppRoutes.tsx` that you want users to reach from the nav needs a corresponding link in `Navigation.tsx`.
+- Every link in `Navigation.tsx` must point to a path that exists in `AppRoutes.tsx`.
+
+`Navigation` is a separate component (rather than inline JSX in `Layout`) to keep concerns separated. The layout shell handles structure; the navigation component handles which links to show. This makes it easy to swap, extend, or test the nav independently.
+
+## How to add a new link
+
+When you add a new route, add a matching link to `Navigation.tsx`.
+
+<Steps>
+  <Step title="Add the route in AppRoutes.tsx">
+    Register your new page as a child route:
+
+    ```tsx src/routes/AppRoutes.tsx
+    { path: 'settings', element: <SettingsPage /> },
+    ```
+  </Step>
+  <Step title="Add the link in Navigation.tsx">
+    Import `Link` (or `NavLink`) from `react-router-dom` and add a new entry pointing to the route path:
+
+    ```tsx src/components/Navigation.tsx
+    <Link to="/settings">Settings</Link>
+    ```
+
+    <Note>
+      Use the exact same path string in both files. A mismatch means the link will navigate to a route that doesn't render anything.
+    </Note>
+  </Step>
+</Steps>
+
+## How to customize
+
+### Change link styles
+
+Use `NavLink` instead of `Link` to get access to the `isActive` state, which lets you apply different styles to the currently active link:
+
+```tsx
+import { NavLink } from 'react-router-dom';
+
+<NavLink
+  to="/features"
+  className={({ isActive }) =>
+    isActive ? 'font-bold underline' : 'text-gray-600'
+  }
+>
+  Features
+</NavLink>
+```
+
+### Add icons to links
+
+Pair each link with an icon from a library like `lucide-react`, which is available in this template:
+
+```tsx
+import { Home } from 'lucide-react';
+
+<Link to="/" className="flex items-center gap-2">
+  <Home size={16} />
+  Home
+</Link>
+```
+
+### Make the nav responsive
+
+For mobile support, wrap links in a collapsible element and toggle visibility with a hamburger button. The shadcn/ui `Sheet` component is already available in this template and works well for a mobile drawer nav.
+
+<Tip>
+  The template includes shadcn/ui. Use the `Sheet` component for a slide-in mobile menu without adding extra dependencies.
+</Tip>
+
+### Change the nav position or layout
+
+`Navigation` is rendered as a direct child of the outer `flex-col` container in `Layout`. To move it to a sidebar, change the outer container to `flex-row` and adjust the nav's width and height styles accordingly.
