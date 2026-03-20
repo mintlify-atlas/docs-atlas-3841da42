@@ -1,0 +1,70 @@
+{
+  "projectType": "frontend",
+  "projectName": "Vite + React + TypeScript + Tailwind + shadcn/ui Template",
+  "projectDescription": "A minimal, production-oriented React starter template combining Vite, TypeScript, Tailwind CSS, shadcn/ui primitives, and declarative React Router DOM routing.",
+  "theme": "willow",
+  "primaryColor": "#6366f1",
+  "lightColor": "#e0e7ff",
+  "darkColor": "#3730a3",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Getting Started",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": ["introduction", "quickstart"]
+          },
+          {
+            "group": "Project Structure",
+            "pages": ["structure/overview", "structure/routing", "structure/styling"]
+          }
+        ]
+      },
+      {
+        "tab": "Components",
+        "groups": [
+          {
+            "group": "UI Primitives",
+            "pages": ["components/button", "components/card", "components/input"]
+          },
+          {
+            "group": "Layout",
+            "pages": ["components/layout", "components/navigation"]
+          }
+        ]
+      },
+      {
+        "tab": "Guides",
+        "groups": [
+          {
+            "group": "Development",
+            "pages": ["guides/adding-pages", "guides/adding-components", "guides/path-aliases"]
+          },
+          {
+            "group": "Deployment",
+            "pages": ["guides/deploying", "guides/troubleshooting"]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Vite + rolldown-vite for lightning-fast dev server and builds",
+    "React 19 with TypeScript for type-safe component development",
+    "Tailwind CSS v4 utility-first styling with @tailwindcss/vite plugin",
+    "shadcn/ui primitives (Button, Card, Input) with Radix UI and CVA",
+    "React Router DOM v7 with declarative object-based route definitions",
+    "@ path alias resolving to src/ for clean imports",
+    "ESLint configured for React hooks and TypeScript",
+    "Shared Layout component with Navigation and Outlet"
+  ],
+  "publicApiSurface": [
+    "Button — variants: default, destructive, outline, secondary, ghost, link; sizes: default, sm, lg, icon",
+    "Card, CardHeader, CardTitle, CardDescription, CardAction, CardContent, CardFooter",
+    "Input — forwardRef-compatible HTML input wrapper",
+    "cn() — clsx + tailwind-merge utility for conditional class merging",
+    "AppRoutes — RouteObject[] defining /, /features, /about routes",
+    "Layout — shared shell with Navigation and react-router-dom Outlet"
+  ]
+}
